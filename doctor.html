@@ -643,6 +643,48 @@
     </div>
   </div>
 
+  <!-- LONGITUDINAL PATIENT HISTORY DRAWER/MODAL (RULE #12 & #13) -->
+  <div id="patient-history-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:130;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#fff;border-radius:18px;max-width:850px;width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.3);display:flex;flex-direction:column;">
+      <div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fff;position:sticky;top:0;z-index:10;">
+        <div>
+          <h3 style="font-size:18px;font-weight:700;" id="ph-name">Ananya Rao</h3>
+          <p style="font-size:12px;color:var(--slate-600);" id="ph-sub">Patient ID: P005 • ABHA: 91-4829-1029-4820</p>
+        </div>
+        <button onclick="closePatientHistoryModal()" style="border:none;background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">&times;</button>
+      </div>
+
+      <div style="padding:24px 28px;display:flex;flex-direction:column;gap:20px;">
+        <!-- VITALS & ALLERGIES -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div style="background:#fef2f2;border:1px solid #fecaca;padding:14px;border-radius:10px;">
+            <div style="font-size:12px;font-weight:700;color:#991b1b;text-transform:uppercase;margin-bottom:4px;">Known Allergies</div>
+            <div id="ph-allergies" style="font-size:13.5px;color:#7f1d1d;font-weight:600;">Penicillin (Erythematous rash)</div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:10px;">
+            <div style="font-size:12px;font-weight:700;color:var(--slate-600);text-transform:uppercase;margin-bottom:4px;">Chronic Conditions</div>
+            <div id="ph-chronic" style="font-size:13.5px;color:var(--dark);font-weight:600;">Migraine history since 2024</div>
+          </div>
+        </div>
+
+        <!-- INTERACTIVE LONGITUDINAL TIMELINE -->
+        <div>
+          <h4 style="font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+            <span>Interactive Longitudinal Health Journey</span>
+            <span class="badge badge-primary">Click visit to expand details</span>
+          </h4>
+          <div id="ph-timeline-container" style="display:flex;flex-direction:column;gap:12px;">
+            <!-- Expandable visit timeline elements -->
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 28px;border-top:1px solid var(--border);background:#fff;display:flex;justify-content:flex-end;">
+        <button onclick="closePatientHistoryModal()" style="padding:10px 20px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-weight:600;">Close History</button>
+      </div>
+    </div>
+  </div>
+
   <script src="src/models/patient.js"></script>
   <script src="src/models/clinicalHandoff.js"></script>
   <script src="src/models/prescription.js"></script>
@@ -951,6 +993,96 @@
       closeVerifyModal();
       renderQueue();
       alert('Prescription verified and digitally signed! Added to patient longitudinal health record.');
+    }
+
+    function openPatientView(patientId) {
+      var patient = CodeScribeServices.Storage.getPatientById(patientId);
+      if (!patient) return;
+
+      document.getElementById('ph-name').textContent = patient.name;
+      document.getElementById('ph-sub').textContent = `Patient ID: ${patient.id} • ${patient.gender}, ${patient.age} yrs • ABHA: ${patient.abhaId}`;
+      document.getElementById('ph-allergies').textContent = Array.isArray(patient.allergies) ? patient.allergies.join(', ') : 'None recorded';
+      document.getElementById('ph-chronic').textContent = Array.isArray(patient.chronicConditions) ? patient.chronicConditions.join(', ') : 'None recorded';
+
+      var timeline = [
+        {
+          id: 'v1',
+          date: '11 Sep 2026',
+          facility: 'Government General Hospital',
+          dept: 'General Medicine',
+          doctor: 'Dr. Sharma, MD',
+          complaint: 'Recurring throbbing headache, photophobia',
+          summary: 'Patient presented with headache for 3 weeks. AI case taking completed in Kannada.',
+          diagnosis: 'Tension-type headache vs migraine variant',
+          rx: 'Tab Paracetamol 650mg, Tab Naproxen 250mg'
+        },
+        {
+          id: 'v2',
+          date: '12 Aug 2026',
+          facility: 'Government General Hospital',
+          dept: 'General Medicine',
+          doctor: 'Dr. Patel, MBBS',
+          complaint: 'Headache & neck stiffness',
+          summary: 'Acute episodic headache. Advised hydration and rest.',
+          diagnosis: 'Episodic tension headache',
+          rx: 'Tab Paracetamol 500mg SOS'
+        },
+        {
+          id: 'v3',
+          date: '22 Oct 2025',
+          facility: 'City Care Hospital',
+          dept: 'Dermatology',
+          doctor: 'Dr. Rao, MD',
+          complaint: 'Erythematous skin rash',
+          summary: 'Allergic reaction after oral Penicillin course. Rash resolved with antihistamines.',
+          diagnosis: 'Penicillin-induced hypersensitivity (Type I)',
+          rx: 'Tab Cetirizine 10mg once daily'
+        }
+      ];
+
+      var container = document.getElementById('ph-timeline-container');
+      container.innerHTML = '';
+
+      timeline.forEach(v => {
+        var card = document.createElement('div');
+        card.style.cssText = 'border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#fff;';
+        card.innerHTML = `
+          <div onclick="toggleVisitDetail('${v.id}')" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:#f8fafc;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="badge badge-primary">${v.date}</span>
+              <div>
+                <strong style="font-size:13.5px;color:var(--dark);">${v.facility}</strong>
+                <span style="font-size:12px;color:var(--slate-600);margin-left:6px;">• ${v.dept}</span>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--primary);font-weight:600;display:flex;align-items:center;gap:4px;">
+              <span>Expand Details</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div id="visit-detail-${v.id}" style="display:none;padding:16px 18px;border-top:1px solid #e2e8f0;background:#fff;font-size:13px;line-height:1.6;">
+            <div><strong>Attending Physician:</strong> ${v.doctor}</div>
+            <div style="margin-top:4px;"><strong>Chief Complaint:</strong> ${v.complaint}</div>
+            <div style="margin-top:4px;"><strong>Clinical Summary:</strong> ${v.summary}</div>
+            <div style="margin-top:4px;"><strong>Documented Assessment:</strong> ${v.diagnosis}</div>
+            <div style="margin-top:6px;background:#eff6ff;padding:8px 12px;border-radius:6px;color:#1e40af;"><strong>Verified Prescription:</strong> ${v.rx}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('patient-history-modal').style.display = 'flex';
+    }
+
+    function toggleVisitDetail(id) {
+      var el = document.getElementById('visit-detail-' + id);
+      if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    function closePatientHistoryModal() {
+      document.getElementById('patient-history-modal').style.display = 'none';
     }
 
     // Subscribe to cross-window storage events from the Patient App
