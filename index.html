@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <meta name="theme-color" content="#f7f5f2"/>
+  <meta name="description" content="CodeScribe Health — Your health history. Wherever you go. Access ABHA records, find hospitals, start OPD and manage your health journey."/>
+  <title>CodeScribe Health — Patient App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#f7f5f2; --bg-card:#fff; --bg-sub:#f2efe9;
+      --tx:#1a1a18; --tx2:#5a5a54; --tx3:#9a9a90;
+      --brd:#e4e1d9; --brd-l:#eeebe4;
+      --gr:#1a7a4a; --gr-m:#2a9960; --gr-l:#e8f5ee; --gr-g:#d4eddf;
+      --am:#b45309; --am-l:#fef3c7;
+      --rd:#b91c1c; --rd-l:#fee2e2;
+      --bl:#1d4ed8; --bl-l:#eff6ff;
+      --nav:64px; --sb:env(safe-area-inset-bottom,0px);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:#1a1a18;color:var(--tx);-webkit-font-smoothing:antialiased;overflow:hidden}
+    #app{position:relative;width:100%;max-width:430px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+    @media(min-width:600px){body{display:flex;align-items:center;justify-content:center;min-height:100vh}#app{border-radius:40px;box-shadow:0 24px 80px rgba(0,0,0,.4);height:min(100dvh,880px)}}
+    .screens{flex:1;position:relative;overflow:hidden}
+    .screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;background:var(--bg);-webkit-overflow-scrolling:touch}
+    .screen.active{display:flex}
+    .screen::-webkit-scrollbar{display:none}
+    #bnav{flex-shrink:0;background:var(--bg-card);border-top:1px solid var(--brd);display:flex;align-items:stretch;height:calc(var(--nav) + var(--sb));padding-bottom:var(--sb)}
+    #bnav.hidden{display:none}
+    .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:8px 4px;border:none;background:none;color:var(--tx3);font-size:10px;font-weight:500;transition:color .15s;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    .ni.active{color:var(--gr)}
+    .ni svg{width:22px;height:22px}
+    h1{font-size:22px;font-weight:700;line-height:1.25}
+    h2{font-size:17px;font-weight:700;line-height:1.3}
+    h3{font-size:15px;font-weight:600;line-height:1.35}
+    p{line-height:1.6}
+    .lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:13px 20px;transition:all .15s;-webkit-tap-highlight-color:transparent;width:100%;min-height:50px}
+    .bp{background:var(--gr);color:#fff}.bp:active{background:#155a38;transform:scale(.98)}
+    .bs{background:var(--bg-sub);color:var(--tx);border:1px solid var(--brd)}.bs:active{background:var(--brd);transform:scale(.98)}
+    .bo{background:transparent;color:var(--gr);border:1.5px solid var(--gr)}.bo:active{background:var(--gr-l)}
+    .bg-btn{background:transparent;color:var(--tx2);font-size:14px;font-weight:500;padding:10px;min-height:auto}
+    .sm{font-size:13px;padding:9px 16px;min-height:38px}
+    .brd{background:var(--rd-l);color:var(--rd);border:1px solid #fca5a5}
+    .card{background:var(--bg-card);border-radius:16px;border:1px solid var(--brd-l);padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .phdr{padding:16px 20px 12px;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--brd-l)}
+    .phdr-i{display:flex;align-items:center;gap:12px}
+    .bbtn{width:36px;height:36px;border-radius:8px;border:1px solid var(--brd);background:var(--bg-card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+    .bbtn:active{background:var(--bg-sub)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:9999px;font-size:11px;font-weight:600}
+    .bgg{background:var(--gr-l);color:var(--gr)}.bga{background:var(--am-l);color:var(--am)}.bgr{background:var(--rd-l);color:var(--rd)}.bgb{background:var(--bl-l);color:var(--bl)}
+    .dot{width:6px;height:6px;border-radius:50%;display:inline-block}.dg{background:var(--gr-m)}.da{background:var(--am)}
+    .inp{width:100%;padding:13px 16px;border:1.5px solid var(--brd);border-radius:12px;font-family:inherit;font-size:15px;color:var(--tx);background:var(--bg-card);outline:none;transition:border-color .15s}
+    .inp:focus{border-color:var(--gr)}.inp::placeholder{color:var(--tx3)}.inp.hi{padding-left:42px}
+    .inp-w{position:relative}.inp-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--tx3)}
+    .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.chips::-webkit-scrollbar{display:none}
+    .chip{flex-shrink:0;padding:6px 14px;border-radius:9999px;border:1.5px solid var(--brd);font-size:13px;font-weight:500;color:var(--tx2);background:var(--bg-card);cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .chip.on{border-color:var(--gr);background:var(--gr-l);color:var(--gr)}
+    .demo-l{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--am-l);color:var(--am);border-radius:9999px;font-size:10px;font-weight:600}
+    @keyframes pulse-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+    @keyframes wave{0%,100%{height:6px}50%{height:24px}}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes scale-in{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+    /* WELCOME */
+    #sw{background:var(--bg);justify-content:space-between}
+    .wt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px 40px;text-align:center}
+    .wl{width:64px;height:64px;background:var(--gr);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;color:white}
+    .wb-{font-size:22px;font-weight:800;margin-bottom:6px;letter-spacing:-.5px}
+    .wtag{font-size:13px;font-weight:500;color:var(--gr);letter-spacing:.04em;text-transform:uppercase;margin-bottom:32px}
+    .whl{font-size:28px;font-weight:800;line-height:1.2;letter-spacing:-.5px;margin-bottom:16px}
+    .wsub{font-size:15px;color:var(--tx2);line-height:1.65;max-width:320px}
+    .wac{padding:24px 24px calc(24px + var(--sb));display:flex;flex-direction:column;gap:10px}
+    /* HOME */
+    .hh{padding:20px 20px 16px;display:flex;align-items:center;justify-content:space-between}
+    .gs{font-size:12px;color:var(--tx3);font-weight:500;margin-bottom:3px}
+    .gn{font-size:20px;font-weight:700;letter-spacing:-.3px}
+    .av{width:44px;height:44px;border-radius:50%;background:var(--gr-l);border:2px solid var(--gr-g);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--gr);flex-shrink:0}
+    .ab{margin:0 20px 16px;padding:10px 14px;background:var(--gr-l);border:1px solid var(--gr-g);border-radius:12px;display:flex;align-items:center;gap:8px;font-size:12px}
+    .ai{font-weight:600;color:var(--gr)}
+    .qg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .qc{background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;display:flex;flex-direction:column;gap:10px}
+    .qc:active{transform:scale(.97);background:var(--bg-sub)}
+    .qi{width:40px;height:40px;border-radius:10px;background:var(--gr-l);display:flex;align-items:center;justify-content:center;color:var(--gr)}
+    .qc.hl .qi{background:var(--gr);color:white}
+    .qt{font-size:13px;font-weight:700}.qs{font-size:11px;color:var(--tx3);line-height:1.4}
+    .st{font-size:15px;font-weight:700;margin-bottom:12px}
+    .sg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .si{background:var(--bg-card);border:1px solid var(--brd-l);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px}
+    .sv{font-size:22px;font-weight:800}.sl{font-size:11px;color:var(--tx3);font-weight:500}
+    .cc-{background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;overflow:hidden}
+    .ch{padding:14px 16px;border-bottom:1px solid var(--brd-l);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .cn{font-size:14px;font-weight:700}.cd{font-size:12px;color:var(--tx3);margin-top:2px}
+    .cb{padding:14px 16px}.cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .cr:last-child{margin-bottom:0}.ck{font-size:12px;color:var(--tx3)}.cv{font-size:13px;font-weight:600}
+    .cf{padding:12px 16px;border-top:1px solid var(--brd-l)}
+    .mi{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--brd-l)}
+    .mi:last-child{border-bottom:none}
+    .mic-ico{width:36px;height:36px;border-radius:8px;background:var(--gr-l);display:flex;align-items:center;justify-content:center;color:var(--gr);flex-shrink:0;font-size:18px}
+    .mn{font-size:14px;font-weight:600}.md{font-size:12px;color:var(--tx3);margin-top:2px}
+    .ab2{background:var(--gr);border-radius:16px;padding:16px;color:white}
+    /* OPD */
+    .oh{background:var(--bg);padding:20px 20px 16px}
+    .lb{flex-shrink:0;width:48px;height:48px;border-radius:12px;border:1.5px solid var(--brd);background:var(--bg-card);display:flex;align-items:center;justify-content:center;color:var(--gr);cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .lb:active{background:var(--gr-l)}
+    .hc{background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;margin:0 20px 12px;overflow:hidden}
+    .hch{padding:14px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .hn{font-size:15px;font-weight:700}.hl{font-size:12px;color:var(--tx3);margin-top:2px}
+    .hcb{padding:0 16px 14px}
+    .osr{display:flex;gap:16px;margin-bottom:12px}.os{display:flex;flex-direction:column;gap:2px}
+    .osv{font-size:13px;font-weight:600}.osl{font-size:11px;color:var(--tx3)}
+    .hcf{padding:12px 16px;border-top:1px solid var(--brd-l);display:flex;gap:8px}
+    .sp{margin:16px 20px;background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;overflow:hidden}
+    .sph{padding:14px 16px;background:var(--gr);display:flex;align-items:center;justify-content:space-between}
+    .ll{display:flex;align-items:center;gap:6px;color:white;font-size:14px;font-weight:700}
+    .ld{width:8px;height:8px;border-radius:50%;background:#6ee7b7;animation:pulse-dot 1.5s ease-in-out infinite}
+    .sg2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd-l)}
+    .sb2{background:var(--bg-card);padding:14px 16px}
+    .sbv{font-size:24px;font-weight:800;color:var(--gr)}.sbn{font-size:11px;color:var(--tx3);margin-top:2px}
+    .dc{display:inline-flex;align-items:center;padding:5px 12px;border-radius:9999px;background:var(--bg-sub);border:1px solid var(--brd);font-size:12px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;margin:3px}
+    .dc.sel{background:var(--gr-l);border-color:var(--gr);color:var(--gr)}
+    /* VOICE */
+    .mq{width:100%;background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;padding:16px;margin-bottom:24px}
+    .lb2{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9999px;background:var(--bl-l);color:var(--bl);border:1px solid #bfdbfe;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    .lb2:active{background:#dbeafe}
+    .mrc{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+    .mr{position:absolute;width:110px;height:110px;border-radius:50%;border:2px solid var(--gr);opacity:0}
+    .mr.active{animation:pulse-ring 1.5s ease-out infinite}
+    .mr2{animation-delay:.5s!important}
+    .mb-{width:88px;height:88px;border-radius:50%;background:var(--gr);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(26,122,74,.3);-webkit-tap-highlight-color:transparent;position:relative;z-index:1;color:white}
+    .mb-:active{transform:scale(.94)}.mb-.ls{background:#dc2626}
+    .mst{font-size:14px;font-weight:600;color:var(--tx2);margin-bottom:8px}.mst.ls{color:var(--rd)}
+    .wf{display:flex;align-items:center;gap:3px;height:32px;margin-bottom:20px;opacity:0;transition:opacity .3s}.wf.active{opacity:1}
+    .wb2{width:3px;background:var(--gr);border-radius:2px;animation:wave .8s ease-in-out infinite}
+    .wb2:nth-child(1){animation-delay:0s}.wb2:nth-child(2){animation-delay:.1s}.wb2:nth-child(3){animation-delay:.2s}.wb2:nth-child(4){animation-delay:.3s}.wb2:nth-child(5){animation-delay:.4s}.wb2:nth-child(6){animation-delay:.3s}.wb2:nth-child(7){animation-delay:.2s}.wb2:nth-child(8){animation-delay:.1s}
+    .tb{width:100%;background:var(--bg-card);border:1.5px solid var(--brd);border-radius:16px;padding:14px;margin-bottom:12px;min-height:80px}.tb.has{border-color:var(--gr)}
+    .tbt{font-size:15px;line-height:1.6}.tbp{font-size:14px;color:var(--tx3)}
+    .mc{display:flex;gap:8px;width:100%;margin-bottom:16px}
+    .db{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;border:1.5px dashed var(--am);background:var(--am-l);color:var(--am);font-size:13px;font-weight:600;cursor:pointer;width:100%;justify-content:center;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    .db:active{opacity:.8}
+    .lg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .lbtn{padding:10px 6px;border-radius:12px;border:1.5px solid var(--brd);background:var(--bg-card);font-size:12px;font-weight:600;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;line-height:1.3;font-family:inherit}
+    .lnat{font-size:10px;color:var(--tx3);margin-top:2px}.lbtn.sel{border-color:var(--gr);background:var(--gr-l);color:var(--gr)}
+    /* FLOW */
+    .fl{padding:20px}
+    .steps{display:flex;align-items:center;margin-bottom:24px}
+    .sd{width:24px;height:24px;border-radius:50%;border:2px solid var(--brd);background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--tx3);flex-shrink:0}
+    .sd.done{background:var(--gr);border-color:var(--gr);color:white}.sd.act{border-color:var(--gr);color:var(--gr)}
+    .sl-{flex:1;height:2px;background:var(--brd-l)}.sl-.done{background:var(--gr)}
+    .ci{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--brd-l);cursor:pointer}.ci:last-child{border-bottom:none}
+    .ck2{width:22px;height:22px;border-radius:6px;border:2px solid var(--brd);background:var(--bg-card);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+    .ci.chk .ck2{background:var(--gr);border-color:var(--gr)}.cl{font-size:14px;font-weight:500}
+    .fo{padding:13px 16px;border-radius:12px;border:1.5px solid var(--brd);background:var(--bg-card);font-size:14px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:8px;transition:all .15s;font-family:inherit;width:100%;text-align:left}
+    .fo:active{background:var(--bg-sub)}.fo.sel{border-color:var(--gr);background:var(--gr-l);color:var(--gr)}
+    .ps{display:flex;gap:6px}.pb-{flex:1;aspect-ratio:1;border-radius:8px;border:1.5px solid var(--brd);background:var(--bg-card);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    .pb-.sel{background:var(--gr);border-color:var(--gr);color:white}
+    .rr{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--brd-l)}.rr:last-child{border-bottom:none}
+    .rk{font-size:12px;color:var(--tx3);font-weight:500;flex-shrink:0;width:130px}.rv{font-size:13px;font-weight:600;text-align:right;flex:1}
+    .tc-{background:var(--gr);border-radius:20px;padding:28px 24px;text-align:center;color:white;margin-bottom:16px}
+    .tn{font-size:56px;font-weight:900;letter-spacing:-2px;line-height:1;margin:12px 0}
+    .tst{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px}
+    .tsv{font-size:18px;font-weight:800}.tsl{font-size:10px;opacity:.75;margin-top:2px}
+    .as{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .asl{padding:12px;border-radius:12px;border:1.5px solid var(--brd);background:var(--bg-card);font-size:13px;font-weight:600;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    .asl.sel{border-color:var(--gr);background:var(--gr-l);color:var(--gr)}
+    /* TL */
+    .tl{padding:0 20px}
+    .tli{display:flex;gap:14px;padding-bottom:24px}
+    .tll{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:36px}
+    .tld{width:12px;height:12px;border-radius:50%;border:2px solid var(--gr);background:var(--bg-card);flex-shrink:0}
+    .tll-{width:2px;flex:1;background:var(--brd-l);margin-top:4px}
+    .tldato{font-size:11px;font-weight:600;color:var(--tx3)}
+    .tlc{flex:1;background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;padding:14px;margin-top:-2px}
+    .tlh{font-size:14px;font-weight:700}.tldept{font-size:12px;color:var(--tx3);margin:2px 0 8px}
+    .tlco{font-size:13px;color:var(--tx2);margin-bottom:8px}
+    /* DOCS */
+    .di{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--brd-l)}.di:last-child{border-bottom:none}
+    .dic{width:40px;height:40px;border-radius:10px;background:var(--bl-l);display:flex;align-items:center;justify-content:center;color:var(--bl);flex-shrink:0}
+    .din{font-size:14px;font-weight:600}.dim{font-size:12px;color:var(--tx3);margin-top:2px}
+    .dvb{margin-left:auto;padding:6px 14px;border-radius:9999px;border:1.5px solid var(--brd);background:var(--bg-card);font-size:12px;font-weight:600;color:var(--tx2);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;font-family:inherit}
+    /* PROFILE */
+    .ph{background:var(--bg-card);padding:24px 20px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--brd-l)}
+    .pav{width:64px;height:64px;border-radius:50%;background:var(--gr-l);border:2px solid var(--gr-g);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--gr);flex-shrink:0}
+    .pn{font-size:18px;font-weight:700}.pa{font-size:12px;color:var(--gr);font-weight:600;margin-top:4px}.pm{font-size:12px;color:var(--tx3);margin-top:2px}
+    .ps2{padding:16px 20px}
+    .pr{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--brd-l);cursor:pointer;-webkit-tap-highlight-color:transparent}.pr:last-child{border-bottom:none}.pr:active{opacity:.7}
+    .pri{width:36px;height:36px;border-radius:8px;background:var(--bg-sub);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .prl{font-size:14px;font-weight:600;flex:1}.prv{font-size:12px;color:var(--tx3)}
+    /* SCHEME */
+    .scc{background:var(--bg-card);border:1px solid var(--brd-l);border-radius:16px;padding:16px;margin-bottom:10px}
+    /* SUCCESS */
+    .succ{width:72px;height:72px;border-radius:50%;background:var(--gr-l);border:2px solid var(--gr-g);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:scale-in .4s cubic-bezier(.175,.885,.32,1.275);color:var(--gr)}
+    /* UTILS */
+    .p20{padding-left:20px;padding-right:20px}
+    .mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+    .mt12{margin-top:12px}
+    .fx{display:flex}.fc{flex-direction:column}.ic{align-items:center}.jb{justify-content:space-between}
+    .g8{gap:8px}.g10{gap:10px}.g12{gap:12px}
+    .tgr{color:var(--gr)}.t3{color:var(--tx3)}
+    .ts{font-size:13px}.tx2{font-size:11px}
+    .wf2{width:100%}.tc2{text-align:center}
+    .bpb{padding-bottom:calc(20px + var(--sb))}
+    #toast{position:fixed;bottom:calc(var(--nav) + var(--sb) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--tx);color:white;padding:10px 20px;border-radius:9999px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="screens">
+
+    <!-- WELCOME -->
+    <div class="screen active" id="sw">
+      <div class="wt">
+        <div class="wl"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div class="wb-">CodeScribe Health</div>
+        <div class="wtag">Your health history. Wherever you go.</div>
+        <div class="whl">One health record.<br/>Every hospital.</div>
+        <p class="wsub">Keep your health records organized, access your history across healthcare visits, and explain your health concerns in your own language.</p>
+      </div>
+      <div class="wac">
+        <button class="btn bp" onclick="go('home')">Get Started</button>
+        <button class="btn bo" onclick="go('home')">I already have ABHA</button>
+        <button class="btn bg-btn" onclick="go('home')">I'm a new patient</button>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="screen" id="sh">
+      <div class="hh">
+        <div><div class="gs" id="greet">Good morning</div><div class="gn">Lakshmi Gowda &#x1F44B;</div></div>
+        <div class="av">L</div>
+      </div>
+      <div class="ab">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>ABHA Connected &#8212;</span><span class="ai">lakshmi.gowda@abdm</span>
+      </div>
+      <!-- Active OPD -->
+      <div class="ab2 p20 mb16" id="aopd" style="display:none;margin:0 20px 16px;">
+        <div class="fx ic jb mb8"><h3 style="color:white;">Active OPD Visit</h3><span style="background:rgba(255,255,255,.2);color:white;font-size:11px;font-weight:600;padding:3px 8px;border-radius:9999px;">&#9679; Waiting</span></div>
+        <p style="font-size:13px;opacity:.85;">Government General Hospital &#183; General Medicine</p>
+        <div class="fx ic jb mt12">
+          <div><div style="font-size:22px;font-weight:900;color:white;">A-27</div><div style="font-size:11px;opacity:.75;color:white;">Token</div></div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:900;color:white;">12</div><div style="font-size:11px;opacity:.75;color:white;">Queue</div></div>
+          <div style="text-align:right;"><div style="font-size:22px;font-weight:900;color:white;">25m</div><div style="font-size:11px;opacity:.75;color:white;">Wait</div></div>
+        </div>
+        <button class="btn bs sm mt12" style="background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3);" onclick="go('opd')">Track Queue</button>
+      </div>
+      <!-- Quick Actions -->
+      <div class="p20 mb20">
+        <div class="lbl mb12">Quick Actions</div>
+        <div class="qg">
+          <div class="qc hl" onclick="go('opd')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="18" height="13" rx="2"/><path d="M8 9V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/></svg></div><div><div class="qt">Hospital OPD</div><div class="qs">Find hospital &amp; start OPD</div></div></div>
+          <div class="qc" onclick="go('hist')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="qt">Medical History</div><div class="qs">View your health journey</div></div></div>
+          <div class="qc" onclick="go('docs')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg></div><div><div class="qt">Latest Prescription</div><div class="qs">View recent prescription</div></div></div>
+          <div class="qc" onclick="toast('Family feature coming soon')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="qt">Connect Family</div><div class="qs">Manage family health</div></div></div>
+          <div class="qc" onclick="go('book')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="qt">Book Appointment</div><div class="qs">Find a doctor &amp; book</div></div></div>
+          <div class="qc" onclick="go('schemes')"><div class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div><div class="qt">Govt Schemes</div><div class="qs">Discover eligible schemes</div></div></div>
+        </div>
+      </div>
+      <!-- Snapshot -->
+      <div class="p20 mb20">
+        <div class="st">Your Health Snapshot</div>
+        <div class="sg">
+          <div class="si"><div class="sv">2</div><div class="sl">Active Medications</div></div>
+          <div class="si"><div class="sv">1</div><div class="sl">Known Allergy</div></div>
+          <div class="si"><div class="sv">8</div><div class="sl">Consultations</div></div>
+          <div class="si"><div class="sv">14</div><div class="sl">Documents</div></div>
+        </div>
+      </div>
+      <!-- Recent Consultation -->
+      <div class="p20 mb20">
+        <div class="st">Recent Consultation</div>
+        <div class="cc-">
+          <div class="ch"><div><div class="cn">Government General Hospital</div><div class="cd">General Medicine</div></div><span class="badge bgg"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Verified</span></div>
+          <div class="cb">
+            <div class="cr"><span class="ck">Date</span><span class="cv">12 Aug 2026</span></div>
+            <div class="cr"><span class="ck">Complaint</span><span class="cv">Headache</span></div>
+            <div class="cr"><span class="ck">Status</span><span class="cv tgr">Doctor Verified</span></div>
+          </div>
+          <div class="cf"><button class="btn bs sm wf2" onclick="go('hist')">View Details</button></div>
+        </div>
+      </div>
+      <!-- Medications -->
+      <div class="p20 mb20">
+        <div class="fx ic jb mb12"><div class="st" style="margin:0;">Current Medications</div><button class="btn bg-btn sm" style="padding:4px;width:auto;" onclick="go('prof')">View All</button></div>
+        <div class="card" style="padding:0 16px;">
+          <div class="mi"><div class="mic-ico">&#x1F48A;</div><div><div class="mn">Paracetamol</div><div class="md">500 mg &#183; Twice daily</div></div><span class="badge bgg" style="margin-left:auto;">Active</span></div>
+          <div class="mi"><div class="mic-ico">&#x1F48A;</div><div><div class="mn">Vitamin D3</div><div class="md">60K IU &#183; Once weekly</div></div><span class="badge bgg" style="margin-left:auto;">Active</span></div>
+        </div>
+      </div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- OPD LIST -->
+    <div class="screen" id="sopd">
+      <div class="oh">
+        <h1 style="margin-bottom:4px;">Hospital OPD</h1>
+        <p style="font-size:14px;color:var(--tx3);margin-bottom:16px;">Find a hospital, check OPD availability and start your visit.</p>
+        <div class="fx g10 ic">
+          <div class="inp-w" style="flex:1;"><svg class="inp-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inp hi" id="hsrch" type="text" placeholder="Search hospital name" oninput="filterH()"/></div>
+          <button class="lb" onclick="toast('&#x1F4CD; Using current location...')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg></button>
+        </div>
+      </div>
+      <div class="p20 mb12"><span class="demo-l">&#9888; Demo live status &#8212; not connected to actual hospital systems</span></div>
+      <div class="p20 mb16">
+        <div class="chips">
+          <div class="chip on" onclick="setHF(this,'all')">All</div>
+          <div class="chip" onclick="setHF(this,'open')">OPD Open</div>
+          <div class="chip" onclick="setHF(this,'govt')">Government</div>
+          <div class="chip" onclick="setHF(this,'private')">Private</div>
+          <div class="chip" onclick="setHF(this,'hassan')">Hassan</div>
+        </div>
+      </div>
+      <div id="hl">
+        <div class="hc" data-type="govt" data-city="hassan" data-name="government general hospital hassan">
+          <div class="hch"><div><div class="hn">Government General Hospital</div><div class="hl">Hassan, Karnataka</div></div><span class="badge bgg"><span class="dot dg"></span> OPD Open</span></div>
+          <div class="hcb"><div class="osr"><div class="os"><div class="osv">10:00 AM &#8211; 1:00 PM</div><div class="osl">Today's timing</div></div><div class="os"><div class="osv">~25 min</div><div class="osl">Est. wait</div></div></div></div>
+          <div class="hcf"><button class="btn bp sm" style="width:auto;" onclick="selH('GGH')">Start OPD</button><button class="btn bs sm" style="width:auto;" onclick="selH('GGH')">View Details</button></div>
+        </div>
+        <div class="hc" data-type="private" data-city="bangalore" data-name="city care hospital bangalore">
+          <div class="hch"><div><div class="hn">City Care Hospital</div><div class="hl">Bangalore, Karnataka</div></div><span class="badge bgg"><span class="dot dg"></span> OPD Open</span></div>
+          <div class="hcb"><div class="osr"><div class="os"><div class="osv">9:00 AM &#8211; 2:00 PM</div><div class="osl">Today's timing</div></div><div class="os"><div class="osv">~35 min</div><div class="osl">Est. wait</div></div></div></div>
+          <div class="hcf"><button class="btn bp sm" style="width:auto;" onclick="selH('CCH')">Start OPD</button><button class="btn bs sm" style="width:auto;" onclick="selH('CCH')">View Details</button></div>
+        </div>
+        <div class="hc" data-type="private" data-city="hassan" data-name="private specialty clinic hassan">
+          <div class="hch"><div><div class="hn">Private Specialty Clinic</div><div class="hl">Hassan, Karnataka</div></div><span class="badge bga"><span class="dot da"></span> Available</span></div>
+          <div class="hcb"><div class="osr"><div class="os"><div class="osv">11:00 AM &#8211; 4:00 PM</div><div class="osl">Today's timing</div></div><div class="os"><div class="osv">~15 min</div><div class="osl">Est. wait</div></div></div></div>
+          <div class="hcf"><button class="btn bp sm" style="width:auto;" onclick="selH('PSC')">Start OPD</button><button class="btn bs sm" style="width:auto;" onclick="selH('PSC')">View Details</button></div>
+        </div>
+      </div>
+      <div class="p20 mt12 mb8"><div class="st">Prefer an appointment?</div><button class="btn bo" onclick="go('book')">&#x1F4C5; Book Appointment</button></div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- HOSPITAL DETAIL -->
+    <div class="screen" id="shd">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><div><h2 id="dhn">Government General Hospital</h2><div class="tx2 t3" id="dhl">Hassan, Karnataka</div></div></div></div>
+      <div class="sp">
+        <div class="sph"><div class="ll"><span class="ld"></span>OPD Status &#183; Live</div><span class="demo-l">Demo</span></div>
+        <div class="sg2">
+          <div class="sb2"><div class="sbv">12</div><div class="sbn">Waiting patients</div></div>
+          <div class="sb2"><div class="sbv">25m</div><div class="sbn">Est. wait time</div></div>
+          <div class="sb2"><div class="sbv">11:20</div><div class="sbn">Next slot (AM)</div></div>
+          <div class="sb2"><div class="sbv" style="color:var(--gr-m);">Open</div><div class="sbn">10AM &#8211; 1PM today</div></div>
+        </div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div class="lbl mb12">Departments</div>
+        <div id="depts">
+          <span class="dc sel" onclick="selD(this,'General Medicine')">General Medicine</span>
+          <span class="dc" onclick="selD(this,'Neurology')">Neurology</span>
+          <span class="dc" onclick="selD(this,'Pediatrics')">Pediatrics</span>
+          <span class="dc" onclick="selD(this,'Dermatology')">Dermatology</span>
+        </div>
+      </div>
+      <div style="padding:0 20px 16px;">
+        <div class="card" style="background:var(--gr-l);border-color:var(--gr-g);">
+          <div class="fx ic g8 mb8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gr)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span style="font-size:13px;font-weight:700;color:var(--gr);">We found your existing health history</span></div>
+          <p style="font-size:12px;color:var(--gr);opacity:.85;">8 previous consultations &#183; 2 active medications &#183; 1 known allergy &#183; 3 previous headache-related visits</p>
+        </div>
+      </div>
+      <div style="padding:0 20px;"><button class="btn bp mb8" onclick="go('flow')">Start OPD</button><button class="btn bs" onclick="go('book')">Book Appointment</button></div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- FLOW: CONSENT -->
+    <div class="screen" id="sflow">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><div><h2>Connect Health Records</h2><div class="tx2 t3">Step 1 of 5</div></div></div></div>
+      <div class="fl">
+        <div class="steps mb24"><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd act">2</div><div class="sl-"></div><div class="sd">3</div><div class="sl-"></div><div class="sd">4</div><div class="sl-"></div><div class="sd">5</div></div>
+        <div class="card mb16" style="background:var(--gr-l);border-color:var(--gr-g);">
+          <div class="fx ic g10 mb12"><div style="width:36px;height:36px;border-radius:50%;background:var(--gr);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700;color:var(--gr);">ABHA Connected</div><div style="font-size:12px;color:var(--gr);opacity:.8;">lakshmi.gowda@abdm</div></div></div>
+          <div class="fx g8" style="flex-wrap:wrap;"><span class="badge bgg">8 consultations</span><span class="badge bgg">14 documents</span><span class="badge bgg">2 medications</span><span class="badge bgg">1 allergy</span></div>
+        </div>
+        <div class="st mb12">Choose what to share</div>
+        <div class="card mb16" style="padding:0 16px;">
+          <div class="ci chk" onclick="tC(this)"><div class="ck2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="cl">Consultations</div></div>
+          <div class="ci chk" onclick="tC(this)"><div class="ck2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="cl">Prescriptions</div></div>
+          <div class="ci chk" onclick="tC(this)"><div class="ck2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="cl">Medication history</div></div>
+          <div class="ci chk" onclick="tC(this)"><div class="ck2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="cl">Lab reports</div></div>
+          <div class="ci" onclick="tC(this)"><div class="ck2"></div><div class="cl">Other documents</div></div>
+        </div>
+        <p style="font-size:12px;color:var(--tx3);margin-bottom:20px;">&#x1F512; Your health information is shared only with your consent.</p>
+        <button class="btn bp mb8" onclick="go('lang')">Give Consent &amp; Continue</button>
+        <button class="btn bg-btn" onclick="go('lang')">Continue Without History</button>
+      </div>
+    </div>
+
+    <!-- FLOW: LANGUAGE -->
+    <div class="screen" id="slang">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><div><h2>Select Language</h2><div class="tx2 t3">Step 2 of 5</div></div></div></div>
+      <div class="fl">
+        <div class="steps mb24"><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd act">3</div><div class="sl-"></div><div class="sd">4</div><div class="sl-"></div><div class="sd">5</div></div>
+        <p style="font-size:15px;color:var(--tx2);margin-bottom:24px;">Choose the language you are most comfortable speaking in.</p>
+        <div class="lg mb24" id="lgrd">
+          <div class="lbtn sel" onclick="selL(this,'kn-IN')">Kannada<div class="lnat">&#x0C95;&#x0CA8;&#x0CCD;&#x0CA8;&#x0CA1;</div></div>
+          <div class="lbtn" onclick="selL(this,'hi-IN')">Hindi<div class="lnat">&#x0939;&#x093F;&#x0902;&#x0926;&#x0940;</div></div>
+          <div class="lbtn" onclick="selL(this,'ta-IN')">Tamil<div class="lnat">&#x0BA4;&#x0BAE;&#x0BBF;&#x0BB4;&#x0BCD;</div></div>
+          <div class="lbtn" onclick="selL(this,'te-IN')">Telugu<div class="lnat">&#x0C24;&#x0C46;&#x0C32;&#x0C41;&#x0C17;&#x0C41;</div></div>
+          <div class="lbtn" onclick="selL(this,'ml-IN')">Malayalam<div class="lnat">&#x0D2E;&#x0D32;&#x0D2F;&#x0D3E;&#x0D33;&#x0D02;</div></div>
+          <div class="lbtn" onclick="selL(this,'mr-IN')">Marathi<div class="lnat">&#x092E;&#x0930;&#x093E;&#x0920;&#x0940;</div></div>
+          <div class="lbtn" onclick="selL(this,'bn-IN')">Bengali<div class="lnat">&#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</div></div>
+          <div class="lbtn" onclick="selL(this,'en-IN')">English<div class="lnat">English</div></div>
+        </div>
+        <button class="btn bp" onclick="go('voice')">Continue</button>
+      </div>
+    </div>
+
+    <!-- FLOW: VOICE -->
+    <div class="screen" id="svoice">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><div><h2>Tell Us About Your Visit</h2><div class="tx2 t3">Step 3 of 5</div></div></div></div>
+      <div class="fl">
+        <div class="steps mb20"><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd act">4</div><div class="sl-"></div><div class="sd">5</div></div>
+        <div class="mq">
+          <div class="fx ic jb mb8"><h2 style="font-size:16px;">What brings you to the hospital today?</h2></div>
+          <p style="font-size:13px;color:var(--tx3);margin-bottom:12px;">Speak naturally in your preferred language.</p>
+          <button class="lb2" onclick="speakQ('What brings you to the hospital today?')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Listen</button>
+        </div>
+        <div class="card mb20" style="border-left:3px solid var(--gr);border-radius:0 12px 12px 0;padding:12px 14px;"><div style="font-size:12px;font-weight:700;color:var(--gr);margin-bottom:6px;">We found something relevant</div><p style="font-size:12px;color:var(--tx2);">You have 3 previous headache-related visits. Last recorded: 12 Aug 2026, Govt General Hospital.</p></div>
+        <div class="fx ic g8 mb20"><span style="font-size:12px;color:var(--tx3);">Speaking in:</span><span id="vlbl" class="badge bgg">Kannada (kn-IN)</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
+          <div class="mrc mb16">
+            <div class="mr" id="mr1"></div>
+            <div class="mr mr2" id="mr2"></div>
+            <button class="mb-" id="mbtn" onclick="toggleMic()"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></button>
+          </div>
+          <div class="mst" id="mst">Tap to speak</div>
+          <div class="wf" id="wf"><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div><div class="wb2"></div></div>
+        </div>
+        <div class="tb" id="tb"><div class="tbp" id="tbp">Your response will appear here...</div><div class="tbt" id="tbt" style="display:none;"></div></div>
+        <div class="mc"><button class="btn bs sm" style="flex:1;" onclick="clrTr()">Clear</button><button class="btn bs sm" style="flex:1;" onclick="editTr()">Edit</button></div>
+        <button class="db mb16" onclick="demoIn()"><span class="demo-l">Demo</span>Use Demo Response (For SIH judges)</button>
+        <button class="btn bp" id="bcont" onclick="procV()" style="opacity:.5;pointer-events:none;">Continue with Response</button>
+      </div>
+    </div>
+
+    <!-- FLOW: FOLLOW-UP -->
+    <div class="screen" id="sfu">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><div><h2>A Few More Details</h2><div class="tx2 t3">Step 4 of 5</div></div></div></div>
+      <div class="fl">
+        <div class="steps mb24"><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd done">&#x2713;</div><div class="sl- done"></div><div class="sd act">5</div></div>
+        <div class="mb20"><div class="fx ic jb mb12"><h3>When did the problem start?</h3><button class="lb2" style="font-size:11px;padding:6px 10px;" onclick="speakQ('When did the problem start?')">&#x1F50A;</button></div><div id="q1"><button class="fo" onclick="pO(this,'q1')">Today</button><button class="fo" onclick="pO(this,'q1')">Yesterday</button><button class="fo sel" onclick="pO(this,'q1')">A few days ago</button><button class="fo" onclick="pO(this,'q1')">More than a week ago</button></div></div>
+        <div class="mb20"><div class="fx ic jb mb12"><h3>Where exactly is the problem?</h3><button class="lb2" style="font-size:11px;padding:6px 10px;" onclick="speakQ('Where exactly is the problem?')">&#x1F50A;</button></div><div id="q2"><button class="fo sel" onclick="pO(this,'q2')">Right side of head</button><button class="fo" onclick="pO(this,'q2')">Left side of head</button><button class="fo" onclick="pO(this,'q2')">Both sides</button><button class="fo" onclick="pO(this,'q2')">Forehead</button></div></div>
+        <div class="mb20"><div class="fx ic jb mb12"><h3>How severe is it? (1&#8211;10)</h3><button class="lb2" style="font-size:11px;padding:6px 10px;" onclick="speakQ('How severe is the pain on a scale of 1 to 10?')">&#x1F50A;</button></div><div class="ps"><button class="pb-" onclick="pP(this,1)">1</button><button class="pb-" onclick="pP(this,2)">2</button><button class="pb-" onclick="pP(this,3)">3</button><button class="pb-" onclick="pP(this,4)">4</button><button class="pb-" onclick="pP(this,5)">5</button><button class="pb-" onclick="pP(this,6)">6</button><button class="pb- sel" onclick="pP(this,7)">7</button><button class="pb-" onclick="pP(this,8)">8</button><button class="pb-" onclick="pP(this,9)">9</button><button class="pb-" onclick="pP(this,10)">10</button></div></div>
+        <div class="mb20"><div class="fx ic jb mb12"><h3>Have you experienced this before?</h3><button class="lb2" style="font-size:11px;padding:6px 10px;" onclick="speakQ('Have you experienced this before?')">&#x1F50A;</button></div><div id="q4"><button class="fo sel" onclick="pO(this,'q4')">Yes</button><button class="fo" onclick="pO(this,'q4')">No</button><button class="fo" onclick="pO(this,'q4')">Not sure</button></div></div>
+        <div class="mb20"><h3 class="mb12">Have you taken any medication?</h3><div class="card" style="background:var(--gr-l);border-color:var(--gr-g);padding:12px 14px;"><div style="font-size:12px;color:var(--gr);font-weight:700;margin-bottom:4px;">From your existing history</div><div style="font-size:13px;">Paracetamol 500mg &#8212; Currently active</div><div style="font-size:11px;color:var(--tx3);margin-top:4px;">Known allergy: Penicillin</div></div></div>
+        <button class="btn bp" onclick="go('rev')">Review My Visit</button>
+      </div>
+    </div>
+
+    <!-- FLOW: REVIEW -->
+    <div class="screen" id="srev">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Review Your OPD Visit</h2></div></div>
+      <div class="fl">
+        <div class="lbl mb8">Your Statement</div>
+        <div class="tb has mb16"><div class="tbt" id="rev-tr">&#x0CA8;&#x0CBF;&#x0CA8;&#x0CCD;&#x0CA8;&#x0CC6; &#x0CB8;&#x0C82;&#x0C9C;&#x0CC6; &#x0C87;&#x0C82;&#x0CA6; &#x0CA4;&#x0CB2;&#x0CC6;&#x0CA8;&#x0CCB;&#x0CB5;&#x0CC1; &#x0C87;&#x0CA6;&#x0CC6;. &#x0CAC;&#x0CB2;&#x0CAD;&#x0CBE;&#x0C97;&#x0CA6;&#x0CB2;&#x0CCD;&#x0CB2;&#x0CBF; &#x0CB9;&#x0CC6;&#x0C9A;&#x0CCD;&#x0C9A;&#x0CC1; &#x0CA8;&#x0CCB;&#x0CB5;&#x0CC1; &#x0C87;&#x0CA6;&#x0CC6; &#x0CAE;&#x0CA4;&#x0CCD;&#x0CA4;&#x0CC1; &#x0CAC;&#x0CC6;&#x0CB3;&#x0C95;&#x0CA8;&#x0CCD;&#x0CA8;&#x0CC1; &#x0CA8;&#x0CCB;&#x0CA1;&#x0CBF;&#x0CA6;&#x0CBE;&#x0C97; &#x0CB9;&#x0CC6;&#x0C9A;&#x0CCD;&#x0C9A;&#x0CBE;&#x0C97;&#x0CC1;&#x0CA4;&#x0CCD;&#x0CA4;&#x0CA6;&#x0CC6;.</div></div>
+        <div class="lbl mb8">AI-Assisted Understanding</div>
+        <div class="fx g8 mb16" style="flex-wrap:wrap;"><span class="badge bgb">Headache</span><span class="badge bgb">Right side</span><span class="badge bgb">Since yesterday evening</span><span class="badge bgb">Light sensitivity</span></div>
+        <div class="lbl mb8">Visit Summary</div>
+        <div class="card mb16" style="padding:0 16px;">
+          <div class="rr"><span class="rk">Hospital</span><span class="rv" id="rv-h">Government General Hospital</span></div>
+          <div class="rr"><span class="rk">Department</span><span class="rv" id="rv-d">General Medicine</span></div>
+          <div class="rr"><span class="rk">Complaint</span><span class="rv">Headache</span></div>
+          <div class="rr"><span class="rk">Onset</span><span class="rv">Yesterday evening</span></div>
+          <div class="rr"><span class="rk">Location</span><span class="rv">Right side of head</span></div>
+          <div class="rr"><span class="rk">Severity</span><span class="rv">7 / 10</span></div>
+          <div class="rr"><span class="rk">Light sensitivity</span><span class="rv">Yes</span></div>
+          <div class="rr"><span class="rk">Previous episodes</span><span class="rv">Yes &#8212; 3 prior visits</span></div>
+        </div>
+        <div class="lbl mb8">Health History (ABHA)</div>
+        <div class="card mb16" style="padding:0 16px;">
+          <div class="rr"><span class="rk">Medication</span><span class="rv">Paracetamol 500mg</span></div>
+          <div class="rr"><span class="rk">Known Allergy</span><span class="rv" style="color:var(--rd);">Penicillin</span></div>
+          <div class="rr"><span class="rk">Prev. Consultations</span><span class="rv">8 (3 headache-related)</span></div>
+        </div>
+        <p style="font-size:11px;color:var(--tx3);margin-bottom:20px;">&#9888; AI-assisted summary. Not a diagnosis. Doctor will review all information.</p>
+        <div class="fx g10"><button class="btn bs" style="flex:1;" onclick="back()">Edit</button><button class="btn bp" style="flex:1;" onclick="confirmO()">Confirm &amp; Continue</button></div>
+      </div>
+    </div>
+
+    <!-- OPD TOKEN -->
+    <div class="screen" id="stok">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="go('home')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><h2>OPD Visit Created</h2></div></div>
+      <div class="fl">
+        <div class="succ"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="tc2 mb20"><div style="font-size:14px;color:var(--tx3);">Your visit has been registered at</div><div style="font-size:17px;font-weight:700;margin-top:4px;" id="tok-h">Government General Hospital</div><div style="font-size:13px;color:var(--tx3);" id="tok-d">General Medicine</div></div>
+        <div class="tc-">
+          <div class="lbl" style="color:rgba(255,255,255,.7);">Your Token Number</div>
+          <div class="tn">A-27</div>
+          <div style="font-size:13px;opacity:.8;">11 Sep 2026 &#183; General Medicine</div>
+          <div class="tst"><div><div class="tsv">12</div><div class="tsl">Queue position</div></div><div><div class="tsv">25m</div><div class="tsl">Est. wait</div></div><div><div class="tsv">A-15</div><div class="tsl">Now serving</div></div></div>
+        </div>
+        <div class="demo-l mb16" style="display:flex;justify-content:center;">&#9888; Demo queue &#8212; not connected to actual hospital system</div>
+        <div class="card mb16"><div class="lbl mb8">Status</div><div class="fx ic g8"><span class="ld"></span><span style="font-size:14px;font-weight:600;color:var(--gr);">Waiting</span></div><p style="font-size:13px;color:var(--tx3);margin-top:8px;">Please wait near the OPD counter. You will be called when your token is ready.</p></div>
+        <button class="btn bp mb8" onclick="go('queue')">Track Queue</button>
+        <button class="btn bs" onclick="go('home')">Back to Home</button>
+      </div>
+    </div>
+
+    <!-- OPD QUEUE -->
+    <div class="screen" id="squeue">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Live OPD Queue</h2></div></div>
+      <div class="fl">
+        <div class="demo-l mb16">&#9888; Demo queue &#8212; not connected to actual hospital system</div>
+        <div class="card mb16" style="background:var(--gr);padding:24px;text-align:center;"><div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Your Token</div><div style="font-size:52px;font-weight:900;color:white;line-height:1;">A-27</div><div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:8px;">General Medicine &#183; Government General Hospital</div></div>
+        <div class="sg2 mb16"><div class="sb2"><div class="sbv">A-15</div><div class="sbn">Now serving</div></div><div class="sb2"><div class="sbv">12</div><div class="sbn">Patients ahead</div></div><div class="sb2"><div class="sbv">25m</div><div class="sbn">Est. wait</div></div><div class="sb2"><div class="sbv" style="color:var(--gr-m);">Open</div><div class="sbn">OPD Status</div></div></div>
+        <div class="card mb16"><p style="font-size:13px;color:var(--tx2);">Please remain near the OPD department. You will be called when your token is reached.</p></div>
+        <button class="btn bs" onclick="go('home')">Back to Home</button>
+      </div>
+    </div>
+
+    <!-- BOOK APPOINTMENT -->
+    <div class="screen" id="sbook">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Book Appointment</h2></div></div>
+      <div class="fl">
+        <div class="mb20"><div class="lbl mb8">Hospital</div><div class="as"><div class="asl sel" onclick="pA(this)">Govt General Hospital</div><div class="asl" onclick="pA(this)">City Care Hospital</div><div class="asl" onclick="pA(this)">Private Specialty Clinic</div></div></div>
+        <div class="mb20"><div class="lbl mb8">Department</div><div class="as"><div class="asl sel" onclick="pA(this)">General Medicine</div><div class="asl" onclick="pA(this)">Neurology</div><div class="asl" onclick="pA(this)">Pediatrics</div><div class="asl" onclick="pA(this)">Dermatology</div></div></div>
+        <div class="mb20"><div class="lbl mb8">Doctor</div><div class="as"><div class="asl sel" onclick="pA(this)">Dr. Sharma</div><div class="asl" onclick="pA(this)">Dr. Patel</div><div class="asl" onclick="pA(this)">Dr. Rao</div></div></div>
+        <div class="mb20"><div class="lbl mb8">Date</div><input type="date" class="inp" id="adate" value="2026-09-12"/></div>
+        <div class="mb20"><div class="lbl mb8">Time Slot</div><div class="as"><div class="asl sel" onclick="pA(this)">10:00 AM</div><div class="asl" onclick="pA(this)">10:30 AM</div><div class="asl" onclick="pA(this)">11:00 AM</div><div class="asl" onclick="pA(this)">11:30 AM</div></div></div>
+        <button class="btn bp" onclick="confAppt()">Confirm Appointment</button>
+      </div>
+    </div>
+
+    <!-- APPT CONFIRMED -->
+    <div class="screen" id="saconf">
+      <div class="fl" style="padding-top:40px;text-align:center;">
+        <div class="succ"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h1 style="margin-bottom:8px;">Appointment Confirmed</h1>
+        <p style="font-size:14px;color:var(--tx3);margin-bottom:32px;">Your appointment has been successfully booked.</p>
+        <div class="card mb20" style="text-align:left;padding:0 16px;">
+          <div class="rr"><span class="rk">Hospital</span><span class="rv">Govt General Hospital</span></div>
+          <div class="rr"><span class="rk">Doctor</span><span class="rv">Dr. Sharma</span></div>
+          <div class="rr"><span class="rk">Department</span><span class="rv">General Medicine</span></div>
+          <div class="rr"><span class="rk">Date</span><span class="rv">12 Sep 2026</span></div>
+          <div class="rr"><span class="rk">Time</span><span class="rv">10:00 AM</span></div>
+          <div class="rr"><span class="rk">Appointment ID</span><span class="rv tgr">APPT-2026-4821</span></div>
+        </div>
+        <button class="btn bp mb8" onclick="go('home')">Back to Home</button>
+        <button class="btn bs" onclick="go('hist')">View History</button>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="shist">
+      <div class="oh"><h1 style="margin-bottom:16px;">My Health History</h1><div class="chips"><div class="chip on" onclick="sCp(this)">All</div><div class="chip" onclick="sCp(this)">Consultations</div><div class="chip" onclick="sCp(this)">Medications</div><div class="chip" onclick="sCp(this)">Reports</div><div class="chip" onclick="sCp(this)">Prescriptions</div></div></div>
+      <div class="tl" style="padding-top:20px;">
+        <div class="tli" id="hist-new" style="display:none;">
+          <div class="tll"><div class="tld" style="background:var(--gr);border-color:var(--gr);"></div><div class="tll-"></div></div>
+          <div><div class="tldato mb8">11 Sep 2026</div><div class="tlc"><div class="tlh">Government General Hospital</div><div class="tldept">General Medicine</div><div class="tlco">Headache &#183; AI-assisted case-taking</div><div class="fx g8" style="flex-wrap:wrap;"><span class="badge bgg">Doctor Verified</span><span class="badge bgb">Kannada</span></div></div></div>
+        </div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">12 Aug 2026</div><div class="tlc"><div class="tlh">Government General Hospital</div><div class="tldept">General Medicine</div><div class="tlco">Headache &#183; Paracetamol &#183; Symptoms improved</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">04 Jul 2026</div><div class="tlc"><div class="tlh">City Care Hospital</div><div class="tldept">General Medicine</div><div class="tlco">Headache + Nausea &#183; Treatment recorded</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">18 Mar 2026</div><div class="tlc"><div class="tlh">Private Specialty Clinic</div><div class="tldept">Neurology</div><div class="tlco">Headache &#183; Neurology consultation</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">05 Jan 2026</div><div class="tlc"><div class="tlh">Government General Hospital</div><div class="tldept">General Medicine</div><div class="tlco">Fever &#183; Paracetamol &#183; Complete recovery</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">22 Oct 2025</div><div class="tlc"><div class="tlh">City Care Hospital</div><div class="tldept">Dermatology</div><div class="tlco">Skin rash &#183; Allergic reaction &#183; Penicillin noted</div><div class="fx g8"><span class="badge bgg">Doctor Verified</span><span class="badge bgr">Allergy Noted</span></div></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div><div class="tll-"></div></div><div><div class="tldato mb8">14 Jun 2025</div><div class="tlc"><div class="tlh">Government General Hospital</div><div class="tldept">General Medicine</div><div class="tlco">Headache &#183; MRI recommended &#183; Normal report</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+        <div class="tli"><div class="tll"><div class="tld"></div></div><div><div class="tldato mb8">03 Feb 2025</div><div class="tlc"><div class="tlh">Private Specialty Clinic</div><div class="tldept">General Medicine</div><div class="tlco">Annual health check &#183; All parameters normal</div><span class="badge bgg">Doctor Verified</span></div></div></div>
+      </div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="screen" id="sdocs">
+      <div class="oh"><h1 style="margin-bottom:16px;">My Documents</h1><div class="chips"><div class="chip on" onclick="sCp(this)">All</div><div class="chip" onclick="sCp(this)">Prescriptions</div><div class="chip" onclick="sCp(this)">Lab Reports</div><div class="chip" onclick="sCp(this)">Imaging</div><div class="chip" onclick="sCp(this)">Discharge</div></div></div>
+      <div class="p20" style="padding-top:16px;">
+        <div class="di"><div class="dic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="din">Prescription</div><div class="dim">12 Aug 2026 &#183; Govt General Hospital</div></div><button class="dvb" onclick="toast('Opening document...')">View</button></div>
+        <div class="di"><div class="dic" style="background:var(--gr-l);color:var(--gr);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="din">Lab Report &#8212; CBC</div><div class="dim">04 Jul 2026 &#183; City Care Hospital</div></div><button class="dvb" onclick="toast('Opening document...')">View</button></div>
+        <div class="di"><div class="dic" style="background:#fdf2f8;color:#9d174d;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div><div class="din">MRI Report &#8212; Brain</div><div class="dim">14 Jun 2025 &#183; Govt General Hospital</div></div><button class="dvb" onclick="toast('Opening document...')">View</button></div>
+        <div class="di"><div class="dic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="din">Discharge Summary</div><div class="dim">22 Oct 2025 &#183; City Care Hospital</div></div><button class="dvb" onclick="toast('Opening document...')">View</button></div>
+        <div class="di"><div class="dic" style="background:var(--gr-l);color:var(--gr);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="din">Annual Health Report</div><div class="dim">03 Feb 2025 &#183; Private Specialty Clinic</div></div><button class="dvb" onclick="toast('Opening document...')">View</button></div>
+      </div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="screen" id="sprof">
+      <div class="ph"><div class="pav">L</div><div><div class="pn">Lakshmi Gowda</div><div class="pa">&#x2713; lakshmi.gowda@abdm</div><div class="pm">Hassan, Karnataka &#183; Age 34 &#183; O+</div></div></div>
+      <div class="ps2"><div class="lbl mb12">Health Identity</div><div class="card" style="padding:14px 16px;"><div class="fx ic jb mb12"><div><div style="font-size:14px;font-weight:700;">ABHA Connected</div><div style="font-size:12px;color:var(--gr);margin-top:2px;">lakshmi.gowda@abdm</div></div><span class="badge bgg">Active</span></div><div class="fx g8"><button class="btn bs sm" style="flex:1;" onclick="toast('Opening ABHA details...')">View ABHA</button><button class="btn bs sm" style="flex:1;" onclick="toast('Managing connection...')">Manage</button></div></div></div>
+      <div class="ps2"><div class="lbl mb12">Personal Information</div><div class="card" style="padding:0 16px;"><div class="rr"><span class="rk">Full Name</span><span class="rv">Lakshmi Gowda</span></div><div class="rr"><span class="rk">Date of Birth</span><span class="rv">14 Mar 1992</span></div><div class="rr"><span class="rk">Phone</span><span class="rv">+91 98765 43210</span></div><div class="rr"><span class="rk">Blood Group</span><span class="rv">O+</span></div><div class="rr"><span class="rk">Known Allergy</span><span class="rv" style="color:var(--rd);">Penicillin</span></div><div class="rr"><span class="rk">Emergency Contact</span><span class="rv">Ravi Gowda (Husband)</span></div></div></div>
+      <div class="ps2"><div class="lbl mb12">Current Medications</div><div class="card" style="padding:0 16px;"><div class="mi"><div class="mic-ico">&#x1F48A;</div><div><div class="mn">Paracetamol</div><div class="md">500mg &#183; Twice daily &#183; Active</div></div></div><div class="mi"><div class="mic-ico">&#x1F48A;</div><div><div class="mn">Vitamin D3</div><div class="md">60K IU &#183; Once weekly &#183; Active</div></div></div></div></div>
+      <div class="ps2"><div class="lbl mb12">Privacy &amp; Consent</div><div class="card mb12"><div style="font-size:13px;font-weight:700;margin-bottom:8px;">Active Access</div><div class="fx jb" style="align-items:flex-start;margin-bottom:8px;"><div><div style="font-size:13px;font-weight:600;">Dr. Sharma</div><div style="font-size:11px;color:var(--tx3);">Govt General Hospital &#183; OPD consultation</div></div><button class="btn brd sm" style="font-size:11px;padding:6px 10px;min-height:auto;" onclick="toast('Access revoked')">Revoke</button></div><div style="font-size:11px;color:var(--tx3);">Expires: Today, 10:42 PM</div></div><div class="card"><p style="font-size:12px;color:var(--tx2);">Govt General Hospital &#8212; viewed Consultation, Medication history &#8212; Today &#8212; Access expired</p></div></div>
+      <div class="ps2"><div class="lbl mb8">Settings</div><div class="pr" onclick="toast('Notifications')"><div class="pri">&#x1F514;</div><div class="prl">Notifications</div><div class="prv">On</div></div><div class="pr" onclick="go('schemes')"><div class="pri">&#x1F3DB;</div><div class="prl">Government Schemes</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div><div class="pr" onclick="toast('Signing out...')"><div class="pri">&#x1F6AA;</div><div class="prl" style="color:var(--rd);">Sign Out</div></div></div>
+      <div class="bpb"></div>
+    </div>
+
+    <!-- SCHEMES -->
+    <div class="screen" id="sschemes">
+      <div class="phdr"><div class="phdr-i"><button class="bbtn" onclick="back()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><h2>Government Health Schemes</h2></div></div>
+      <div class="p20" style="padding-top:16px;">
+        <p style="font-size:13px;color:var(--tx3);margin-bottom:20px;">Discover schemes you may be eligible for. Eligibility is indicative and must be verified with authorities.</p>
+        <div class="scc"><div style="font-size:20px;margin-bottom:12px;">&#x1F3E5;</div><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ayushman Bharat &#8212; PMJAY</div><div style="font-size:12px;color:var(--tx3);margin-bottom:10px;">Health insurance up to &#x20B9;5 lakh per year for eligible families covering secondary and tertiary care.</div><span class="badge bgb">Health Insurance</span><br/><button class="btn bo sm mt12" onclick="toast('Opening scheme details...')">Learn More</button></div>
+        <div class="scc"><div style="font-size:20px;margin-bottom:12px;">&#x1F476;</div><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Janani Suraksha Yojana</div><div style="font-size:12px;color:var(--tx3);margin-bottom:10px;">Safe motherhood intervention for pregnant women from BPL families. Promotes institutional delivery.</div><span class="badge bgb">Maternal Health</span><br/><button class="btn bo sm mt12" onclick="toast('Opening scheme details...')">Learn More</button></div>
+        <div class="scc"><div style="font-size:20px;margin-bottom:12px;">&#x1F474;</div><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Rashtriya Vayoshri Yojana</div><div style="font-size:12px;color:var(--tx3);margin-bottom:10px;">Assistive devices and healthcare support for senior citizens belonging to BPL category.</div><span class="badge bgb">Senior Citizens</span><br/><button class="btn bo sm mt12" onclick="toast('Opening scheme details...')">Learn More</button></div>
+        <div class="scc"><div style="font-size:20px;margin-bottom:12px;">&#x1F33F;</div><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ayush Wellness Centres</div><div style="font-size:12px;color:var(--tx3);margin-bottom:10px;">Access to AYUSH wellness services at government centers.</div><span class="badge bgb">Ayush Services</span><br/><button class="btn bo sm mt12" onclick="toast('Opening scheme details...')">Learn More</button></div>
+      </div>
+      <div class="bpb"></div>
+    </div>
+
+  </div><!-- end screens -->
+
+  <nav id="bnav">
+    <button class="ni" id="n-home" onclick="go('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
+    <button class="ni" id="n-opd" onclick="go('opd')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="18" height="13" rx="2"/><path d="M8 9V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/></svg><span>OPD</span></button>
+    <button class="ni" id="n-hist" onclick="go('hist')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><polyline points="12 6 12 12 16 14"/></svg><span>History</span></button>
+    <button class="ni" id="n-docs" onclick="go('docs')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg><span>Documents</span></button>
+    <button class="ni" id="n-prof" onclick="go('prof')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></button>
+  </nav>
+  <div id="toast"></div>
+</div>
+<script>
+var S={cur:'welcome',stk:['welcome'],tr:'',hosp:'GGH',dept:'General Medicine',lang:'kn-IN',langName:'Kannada',opdSt:'none'};
+var hosps={GGH:{name:'Government General Hospital',loc:'Hassan, Karnataka'},CCH:{name:'City Care Hospital',loc:'Bangalore, Karnataka'},PSC:{name:'Private Specialty Clinic',loc:'Hassan, Karnataka'}};
+var opdSS=['opd','hosp-det','flow','lang','voice','fu','rev','tok','queue','book','aconf'];
+var smap={welcome:'sw',home:'sh',opd:'sopd','hosp-det':'shd',flow:'sflow',lang:'slang',voice:'svoice',fu:'sfu',rev:'srev',tok:'stok',queue:'squeue',book:'sbook',aconf:'saconf',hist:'shist',docs:'sdocs',prof:'sprof',schemes:'sschemes'};
+var navMap={home:'n-home',opd:'n-opd',hist:'n-hist',docs:'n-docs',prof:'n-prof',schemes:'n-prof'};
+
+function go(s){
+  if(recog&&isLs)recog.stop();
+  document.querySelectorAll('.screen').forEach(function(e){e.classList.remove('active');});
+  var el=document.getElementById(smap[s]);
+  if(!el)return;
+  el.classList.add('active');el.scrollTop=0;
+  S.cur=s;
+  if(S.stk[S.stk.length-1]!==s)S.stk.push(s);
+  var nav=document.getElementById('bnav');
+  nav.classList.toggle('hidden',s==='welcome');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  var nk=s==='home'?'home':opdSS.includes(s)?'opd':s;
+  if(navMap[nk])document.getElementById(navMap[nk]).classList.add('active');
+  onE(s);
+  window.history.pushState({s:s},'',(s==='home'?'#home':'#'+s));
+}
+
+function back(){
+  S.stk.pop();
+  var p=S.stk[S.stk.length-1]||'home';
+  document.querySelectorAll('.screen').forEach(function(e){e.classList.remove('active');});
+  var el=document.getElementById(smap[p]);
+  if(!el){go('home');return;}
+  el.classList.add('active');el.scrollTop=0;S.cur=p;
+  var nav=document.getElementById('bnav');
+  nav.classList.toggle('hidden',p==='welcome');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  var nk=p==='home'?'home':opdSS.includes(p)?'opd':p;
+  if(navMap[nk])document.getElementById(navMap[nk]).classList.add('active');
+  onE(p);
+  window.history.back();
+}
+
+function onE(s){
+  if(s==='home'){
+    var h=new Date().getHours();
+    var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+    var el=document.getElementById('greet');if(el)el.textContent=g;
+    var b=document.getElementById('aopd');if(b)b.style.display=S.opdSt==='active'?'block':'none';
+  }
+  if(s==='voice'){var l=document.getElementById('vlbl');if(l)l.textContent=S.langName+' ('+S.lang+')';}
+  if(s==='rev'){
+    var h=hosps[S.hosp]||hosps.GGH;
+    var e=document.getElementById('rv-h');if(e)e.textContent=h.name;
+    var d=document.getElementById('rv-d');if(d)d.textContent=S.dept;
+    var t=document.getElementById('rev-tr');if(t&&S.tr)t.textContent=S.tr;
+  }
+  if(s==='tok'){
+    var h=hosps[S.hosp]||hosps.GGH;
+    var e=document.getElementById('tok-h');if(e)e.textContent=h.name;
+    var d=document.getElementById('tok-d');if(d)d.textContent=S.dept;
+    S.opdSt='active';
+  }
+}
+
+function selH(id){S.hosp=id;var h=hosps[id];var e=document.getElementById('dhn');if(e)e.textContent=h.name;var l=document.getElementById('dhl');if(l)l.textContent=h.loc;go('hosp-det');}
+function filterH(){var q=document.getElementById('hsrch').value.toLowerCase();document.querySelectorAll('#hl .hc').forEach(function(c){c.style.display=c.dataset.name.includes(q)?'':'none';});}
+function setHF(chip,f){chip.parentElement.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on');});chip.classList.add('on');document.querySelectorAll('#hl .hc').forEach(function(c){var show=f==='all'||f==='open'||(f==='govt'&&c.dataset.type==='govt')||(f==='private'&&c.dataset.type==='private')||(f==='hassan'&&c.dataset.city==='hassan');c.style.display=show?'':'none';});}
+function selD(chip,d){document.querySelectorAll('#depts .dc').forEach(function(c){c.classList.remove('sel');});chip.classList.add('sel');S.dept=d;}
+function selL(btn,code){document.querySelectorAll('#lgrd .lbtn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');S.lang=code;var n={'kn-IN':'Kannada','hi-IN':'Hindi','ta-IN':'Tamil','te-IN':'Telugu','ml-IN':'Malayalam','mr-IN':'Marathi','bn-IN':'Bengali','en-IN':'English'};S.langName=n[code]||code;}
+function tC(item){item.classList.toggle('chk');}
+function pO(el,g){document.querySelectorAll('#'+g+' .fo').forEach(function(o){o.classList.remove('sel');});el.classList.add('sel');}
+function pP(el){document.querySelectorAll('.pb-').forEach(function(b){b.classList.remove('sel');});el.classList.add('sel');}
+function pA(el){el.parentElement.querySelectorAll('.asl').forEach(function(o){o.classList.remove('sel');});el.classList.add('sel');}
+function sCp(chip){chip.parentElement.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on');});chip.classList.add('on');}
+
+function confirmO(){
+  S.opdSt='active';
+  var e=document.getElementById('hist-new');if(e)e.style.display='flex';
+  go('tok');
+}
+function confAppt(){go('aconf');}
+
+// Voice
+var recog=null,isLs=false;
+function mkR(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return null;
+  var r=new SR();r.continuous=true;r.interimResults=true;r.lang=S.lang;
+  r.onresult=function(e){var f='',i='';for(var j=e.resultIndex;j<e.results.length;j++){var t=e.results[j][0].transcript;if(e.results[j].isFinal)f+=t;else i+=t;}updTr((S.tr+f+i).trim()||S.tr+i);};
+  r.onerror=function(e){if(e.error==='not-allowed')toast('Microphone permission denied.');stopMUI();isLs=false;};
+  r.onend=function(){stopMUI();isLs=false;};
+  return r;
+}
+function toggleMic(){
+  if(isLs){if(recog)recog.stop();isLs=false;stopMUI();}
+  else{recog=mkR();if(!recog){toast('Speech recognition not supported. Try Chrome.');return;}recog.lang=S.lang;try{recog.start();isLs=true;startMUI();}catch(e){toast('Could not start mic: '+e.message);}}
+}
+function startMUI(){
+  var btn=document.getElementById('mbtn');var st=document.getElementById('mst');var wf=document.getElementById('wf');var r1=document.getElementById('mr1');var r2=document.getElementById('mr2');
+  if(btn)btn.classList.add('ls');if(st){st.textContent='Listening...';st.classList.add('ls');}if(wf)wf.classList.add('active');if(r1)r1.classList.add('active');if(r2)r2.classList.add('active');
+}
+function stopMUI(){
+  var btn=document.getElementById('mbtn');var st=document.getElementById('mst');var wf=document.getElementById('wf');var r1=document.getElementById('mr1');var r2=document.getElementById('mr2');
+  if(btn)btn.classList.remove('ls');if(st){st.textContent='Tap to speak';st.classList.remove('ls');}if(wf)wf.classList.remove('active');if(r1)r1.classList.remove('active');if(r2)r2.classList.remove('active');
+}
+function updTr(text){
+  var box=document.getElementById('tb');var ph=document.getElementById('tbp');var tt=document.getElementById('tbt');var btn=document.getElementById('bcont');
+  if(text&&text.trim()){S.tr=text;if(ph)ph.style.display='none';if(tt){tt.style.display='block';tt.textContent=text;}if(box)box.classList.add('has');if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';}}
+  else{if(ph)ph.style.display='block';if(tt)tt.style.display='none';if(box)box.classList.remove('has');if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';}}
+}
+function clrTr(){S.tr='';updTr('');if(recog&&isLs){recog.stop();isLs=false;}stopMUI();}
+function editTr(){if(!S.tr)return;var n=prompt('Edit your response:',S.tr);if(n!==null){S.tr=n;updTr(n);}}
+function demoIn(){if(recog&&isLs){recog.stop();isLs=false;}stopMUI();var d='\u0ca8\u0cbf\u0ca8\u0ccd\u0ca8\u0cc6 \u0cb8\u0c82\u0c9c\u0cc6 \u0c87\u0c82\u0ca6 \u0ca4\u0cb2\u0cc6\u0ca8\u0ccb\u0cb5\u0cc1 \u0c87\u0ca6\u0cc6. \u0cac\u0cb2\u0cad\u0cbe\u0c97\u0ca6\u0cb2\u0ccd\u0cb2\u0cbf \u0cb9\u0cc6\u0c9a\u0ccd\u0c9a\u0cc1 \u0ca8\u0ccb\u0cb5\u0cc1 \u0c87\u0ca6\u0cc6 \u0cae\u0ca4\u0ccd\u0ca4\u0cc1 \u0cac\u0cc6\u0cb3\u0c95\u0ca8\u0ccd\u0ca8\u0cc1 \u0ca8\u0ccb\u0ca1\u0cbf\u0ca6\u0cbe\u0c97 \u0cb9\u0cc6\u0c9a\u0ccd\u0c9a\u0cbe\u0c97\u0cc1\u0ca4\u0ccd\u0ca4\u0ca6\u0cc6.';S.tr=d;updTr(d);toast('Demo response inserted');}
+function procV(){if(!S.tr){toast('Please record a response first');return;}if(recog&&isLs)recog.stop();stopMUI();go('fu');}
+function speakQ(text){if(!window.speechSynthesis){toast('Speech not supported');return;}window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=S.lang;u.rate=0.9;window.speechSynthesis.speak(u);}
+
+// Toast
+var tT=null;
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');if(tT)clearTimeout(tT);tT=setTimeout(function(){t.classList.remove('show');},2600);}
+
+// Popstate
+window.addEventListener('popstate',function(e){
+  if(e.state&&e.state.s&&smap[e.state.s]){
+    var s=e.state.s;
+    document.querySelectorAll('.screen').forEach(function(sc){sc.classList.remove('active');});
+    document.getElementById(smap[s]).classList.add('active');S.cur=s;
+    var nav=document.getElementById('bnav');nav.classList.toggle('hidden',s==='welcome');
+    document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+    var nk=s==='home'?'home':opdSS.includes(s)?'opd':s;
+    if(navMap[nk])document.getElementById(navMap[nk]).classList.add('active');
+    onE(s);
+  }
+});
+
+// Init
+(function(){
+  var h=new Date().getHours();
+  var g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  var el=document.getElementById('greet');if(el)el.textContent=g;
+  var hash=window.location.hash.replace('#','');
+  if(hash&&smap[hash])go(hash);
+})();
+</script>
+</body>
+</html>
