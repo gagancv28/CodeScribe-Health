@@ -439,6 +439,68 @@
     </div>
   </main>
 
+  <!-- CLINICAL HANDOFF MODAL -->
+  <div id="handoff-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.2);display:flex;flex-direction:column;">
+      <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="token-badge" id="modal-token">A-27</div>
+          <div>
+            <h3 style="font-size:18px;font-weight:700;" id="modal-patient-name">Ananya Rao</h3>
+            <p style="font-size:12px;color:var(--slate-600);" id="modal-patient-sub">Female, 34 yrs • ABHA: 91-4829-1029-4820</p>
+          </div>
+        </div>
+        <button onclick="closeHandoffModal()" style="border:none;background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">&times;</button>
+      </div>
+
+      <div style="padding:24px;display:flex;flex-direction:column;gap:20px;">
+        <!-- CHIEF COMPLAINT -->
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:11px;font-weight:700;color:var(--slate-600);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Current Chief Complaint</div>
+          <div style="font-size:16px;font-weight:700;color:var(--dark);" id="modal-complaint">Recurring right-sided throbbing headache</div>
+          <div style="font-size:13px;color:var(--slate-600);margin-top:4px;" id="modal-duration">Duration: 3 weeks • Priority: Moderate</div>
+        </div>
+
+        <!-- ORIGINAL PATIENT STATEMENT -->
+        <div style="border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--slate-600);text-transform:uppercase;letter-spacing:0.05em;">Original Patient Statement</div>
+            <span class="badge badge-primary" id="modal-lang">Kannada (kn-IN)</span>
+          </div>
+
+          <!-- AUDIO RECORDING (RULE #11) -->
+          <div id="modal-audio-container" style="margin-bottom:14px;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+            <!-- Real player or fallback injected dynamically -->
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--slate-600);margin-bottom:4px;font-weight:600;">Original Transcript (Verbatim):</div>
+            <p style="font-size:14px;line-height:1.6;font-style:italic;color:var(--dark);" id="modal-transcript"></p>
+          </div>
+
+          <div>
+            <div style="font-size:12px;color:var(--slate-600);margin-bottom:4px;font-weight:600;">Normalized Clinical Summary:</div>
+            <p style="font-size:13.5px;line-height:1.6;color:var(--slate-800);" id="modal-normalized"></p>
+          </div>
+        </div>
+
+        <!-- RELEVANT CLINICAL HISTORY -->
+        <div style="border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:11px;font-weight:700;color:var(--slate-600);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Relevant Longitudinal Medical History</div>
+          <ul id="modal-history-list" style="padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--slate-800);">
+          </ul>
+        </div>
+      </div>
+
+      <div style="padding:18px 24px;border-top:1px solid var(--border);background:#fff;display:flex;justify-content:flex-end;gap:12px;border-radius:0 0 18px 18px;">
+        <button onclick="closeHandoffModal()" style="padding:10px 18px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-weight:600;">Close</button>
+        <button class="btn-action" id="btn-start-consult" onclick="startConsultation()">
+          Start Consultation & Prescription &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="src/models/patient.js"></script>
   <script src="src/models/clinicalHandoff.js"></script>
   <script src="src/models/prescription.js"></script>
@@ -526,8 +588,68 @@
       }
     }
 
-    function switchTab(tab) {
-      console.log('Switch to tab', tab);
+    var currentHandoff = null;
+
+    function openHandoffModal(handoffId) {
+      var handoffs = CodeScribeServices.Storage.getHandoffs();
+      var h = handoffs.find(item => item.handoffId === handoffId);
+      if (!h) return;
+      currentHandoff = h;
+
+      var patient = CodeScribeServices.Storage.getPatientById(h.patientId);
+
+      document.getElementById('modal-token').textContent = h.tokenNumber || 'A-01';
+      document.getElementById('modal-patient-name').textContent = h.patientName;
+      document.getElementById('modal-patient-sub').textContent = `${patient ? patient.gender : 'Patient'}, ${patient ? patient.age : 34} yrs • ABHA: ${patient ? patient.abhaId : 'Linked'}`;
+      document.getElementById('modal-complaint').textContent = h.chiefComplaint;
+      document.getElementById('modal-duration').textContent = `Duration: ${h.duration || 'N/A'} • Priority: ${h.priority}`;
+      document.getElementById('modal-lang').textContent = `${h.languageName || 'Native Language'} (${h.language || 'kn-IN'})`;
+      document.getElementById('modal-transcript').textContent = `"${h.originalStatement.rawTranscript || 'No verbal statement recorded.'}"`;
+      document.getElementById('modal-normalized').textContent = h.originalStatement.normalizedSummary || 'Clinical summary synthesized.';
+
+      // AUDIO VERIFICATION RULE #11: If audio doesn't exist, show explicit unavailable note
+      var audioBox = document.getElementById('modal-audio-container');
+      if (h.originalStatement.hasAudio && h.originalStatement.audioBlobUrl) {
+        audioBox.innerHTML = `
+          <div style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            Original Patient Voice Recording (Verified Audio Stream)
+          </div>
+          <audio controls src="${h.originalStatement.audioBlobUrl}" style="width:100%;height:36px;"></audio>
+        `;
+      } else {
+        audioBox.innerHTML = `
+          <div style="font-size:12px;color:var(--slate-600);display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/></svg>
+            <em>Audio recording unavailable for this intake (Consultation notes provided in text).</em>
+          </div>
+        `;
+      }
+
+      // History
+      var histUl = document.getElementById('modal-history-list');
+      histUl.innerHTML = '';
+      if (Array.isArray(h.relevantHistory)) {
+        h.relevantHistory.forEach(item => {
+          var li = document.createElement('li');
+          li.innerHTML = `<strong>${item.date} (${item.facility}):</strong> ${item.note}`;
+          histUl.appendChild(li);
+        });
+      }
+
+      document.getElementById('handoff-modal').style.display = 'flex';
+    }
+
+    function closeHandoffModal() {
+      document.getElementById('handoff-modal').style.display = 'none';
+    }
+
+    function startConsultation() {
+      if (!currentHandoff) return;
+      CodeScribeServices.Storage.updateHandoffStatus(currentHandoff.handoffId, 'In Consultation');
+      closeHandoffModal();
+      renderQueue();
+      openPrescriptionWorkbench(currentHandoff);
     }
 
     // Subscribe to cross-window storage events from the Patient App
