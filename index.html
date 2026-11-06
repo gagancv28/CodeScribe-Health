@@ -779,6 +779,17 @@ window.addEventListener('popstate',function(e){
   var el=document.getElementById('greet');if(el)el.textContent=g;
   var hash=window.location.hash.replace('#','');
   if(hash&&smap[hash])go(hash);
+
+  // Cross-tab synchronization with Doctor Portal
+  if (window.CodeScribeServices && window.CodeScribeServices.Storage) {
+    window.CodeScribeServices.Storage.subscribe(function(key, newVal) {
+      if (key === 'codescribe_prescriptions_v1') {
+        toast('New verified prescription from Dr. Sharma received!');
+        var e = document.getElementById('hist-new');
+        if (e) e.style.display = 'flex';
+      }
+    });
+  }
 })();
 </script>
 </body>
