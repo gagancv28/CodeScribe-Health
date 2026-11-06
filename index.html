@@ -207,6 +207,7 @@
   </style>
 </head>
 <body>
+<a href="doctor.html" style="position:fixed;top:12px;right:16px;z-index:9999;background:#2563eb;color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;box-shadow:0 4px 12px rgba(37,99,235,0.3);display:flex;align-items:center;gap:6px;font-family:'Inter',system-ui,sans-serif;"><span>Doctor Workstation</span> &rarr;</a>
 <div id="app">
   <div class="screens">
 
@@ -610,8 +611,11 @@
   </nav>
   <div id="toast"></div>
 </div>
+<script src="src/models/clinicalHandoff.js"></script>
+<script src="src/services/storageService.js"></script>
+<script src="src/services/audioService.js"></script>
 <script>
-var S={cur:'welcome',stk:['welcome'],tr:'',hosp:'GGH',dept:'General Medicine',lang:'kn-IN',langName:'Kannada',opdSt:'none'};
+var S={cur:'welcome',stk:['welcome'],tr:'',hosp:'GGH',dept:'General Medicine',lang:'kn-IN',langName:'Kannada',opdSt:'none',audioBase64:null};
 var hosps={GGH:{name:'Government General Hospital',loc:'Hassan, Karnataka'},CCH:{name:'City Care Hospital',loc:'Bangalore, Karnataka'},PSC:{name:'Private Specialty Clinic',loc:'Hassan, Karnataka'}};
 var opdSS=['opd','hosp-det','flow','lang','voice','fu','rev','tok','queue','book','aconf'];
 var smap={welcome:'sw',home:'sh',opd:'sopd','hosp-det':'shd',flow:'sflow',lang:'slang',voice:'svoice',fu:'sfu',rev:'srev',tok:'stok',queue:'squeue',book:'sbook',aconf:'saconf',hist:'shist',docs:'sdocs',prof:'sprof',schemes:'sschemes'};
@@ -686,6 +690,32 @@ function sCp(chip){chip.parentElement.querySelectorAll('.chip').forEach(function
 function confirmO(){
   S.opdSt='active';
   var e=document.getElementById('hist-new');if(e)e.style.display='flex';
+  
+  if (window.CodeScribeServices && window.CodeScribeServices.Storage) {
+    var handoff = {
+      handoffId: 'HND-' + Math.floor(1000 + Math.random() * 9000),
+      patientId: 'P005',
+      patientName: 'Ananya Rao',
+      tokenNumber: 'A-27',
+      facility: hosps[S.hosp] ? hosps[S.hosp].name : 'Government General Hospital',
+      department: S.dept || 'General Medicine',
+      chiefComplaint: S.tr ? S.tr.slice(0, 60) : 'Recurring headache and photophobia',
+      duration: '3 weeks',
+      priority: 'Moderate',
+      status: 'AI Summary Ready',
+      language: S.lang,
+      languageName: S.langName,
+      timestamp: new Date().toISOString(),
+      originalStatement: {
+        hasAudio: Boolean(S.audioBase64),
+        audioBlobUrl: S.audioBase64 || null,
+        rawTranscript: S.tr || 'ನಿನ್ನೆ ಸಂಜೆಯಿಂದ ತಲೆನೋವು ಇದೆ. ಬಲಭಾಗದಲ್ಲಿ ಹೆಚ್ಚು ನೋವು ಇದೆ ಮತ್ತು ಬೆಳಕನ್ನು ನೋಡಿದಾಗ ಹೆಚ್ಚಾಗುತ್ತದೆ.',
+        normalizedSummary: 'Headache on right side with visual sensitivity to bright light.'
+      }
+    };
+    CodeScribeServices.Storage.saveHandoff(handoff);
+  }
+  
   go('tok');
 }
 function confAppt(){go('aconf');}
